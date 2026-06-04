@@ -2,42 +2,56 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zaxball Gerçek Multiplayer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Zaxball Real Stadium Edition</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #141414; font-family: -apple-system, sans-serif; color: #fff; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #111; font-family: -apple-system, sans-serif; color: #fff; touch-action: none; }
         
-        #gameCanvas { width: 100%; height: 100%; display: block; background: #278042; touch-action: none; }
+        #canvas-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 35px rgba(0,0,0,0.9); display: none; background: #226633;
+        }
+        canvas { display: block; background: #226633; }
 
         .scoreboard {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%); 
-            display: flex; align-items: center; background: rgba(0, 0, 0, 0.85); 
-            padding: 6px 20px; border-radius: 30px; border: 2px solid #444; 
-            font-weight: 900; font-size: 1.3rem; gap: 15px; pointer-events: none; z-index: 10; display: none;
+            display: flex; align-items: center; background: rgba(0, 0, 0, 0.9); 
+            padding: 5px 20px; border-radius: 30px; border: 2px solid #444; 
+            font-weight: 900; font-size: 1.4rem; gap: 15px; pointer-events: none; z-index: 10; display: none;
         }
         .score.red { color: #ff3366; }
         .score.blue { color: #3399ff; }
 
         #mobile-kick-btn {
-            display: none; position: absolute; bottom: 60px; right: 60px;
-            width: 80px; height: 80px; background: #00ff66; border: 4px solid rgba(255,255,255,0.4);
-            border-radius: 50%; color: #000; font-weight: 900; font-size: 1.1rem;
-            align-items: center; justify-content: center; z-index: 20; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            display: none; position: fixed; bottom: 5%; right: 5%;
+            width: 85px; height: 85px; background: #00ff66; border: 5px solid rgba(255,255,255,0.6);
+            border-radius: 50%; color: #000; font-weight: 900; font-size: 1.2rem;
+            align-items: center; justify-content: center; z-index: 50;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.8); touch-action: none;
         }
 
-        .chat-container {
-            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-            width: 40%; max-width: 400px; display: flex; gap: 10px; z-index: 10; display: none;
+        #settings-gear-btn {
+            position: fixed; top: 20px; right: 20px; width: 45px; height: 45px;
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; cursor: pointer; z-index: 110; transition: all 0.2s;
         }
-        #chat-input {
-            flex: 1; background: rgba(0, 0, 0, 0.8); border: 2px solid #555;
-            padding: 8px 15px; border-radius: 20px; color: #fff; font-size: 0.9rem; outline: none; user-select: text;
-        }
-        #chat-input:focus { border-color: #00ff66; }
-        .send-btn { background: #00ff66; color: #000; border: none; padding: 0 15px; font-weight: bold; border-radius: 20px; cursor: pointer; }
 
-        /* MENÜ / LOBİ */
+        #settings-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 120; align-items: center; justify-content: center;
+        }
+        .settings-box {
+            width: 90%; max-width: 380px; background: #222; border: 2px solid #444;
+            border-radius: 20px; padding: 25px; display: flex; flex-direction: column; gap: 20px;
+        }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .settings-row label { font-size: 0.95rem; font-weight: bold; color: #ccc; }
+        .settings-box select, .settings-box input[type="range"] {
+            background: #333; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 8px; outline: none;
+        }
+
         .screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -51,25 +65,23 @@
             display: flex; flex-direction: column; gap: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .input-group { display: flex; flex-direction: column; gap: 6px; }
-        .input-group label { font-size: 0.8rem; color: #888; font-weight: bold; letter-spacing: 1px; }
+        .input-group label { font-size: 0.8rem; color: #888; font-weight: bold; }
 
         input[type="text"] {
             background: #222; border: 2px solid #444; padding: 12px;
-            border-radius: 10px; color: #fff; font-size: 1rem; outline: none; user-select: text;
+            border-radius: 10px; color: #fff; font-size: 1rem; outline: none; user-select: text; -webkit-user-select: text;
         }
         input[type="text"]:focus { border-color: #00ff66; }
 
         .btn {
             background: #00ff66; color: #000; border: none; padding: 14px;
             font-size: 1.1rem; font-weight: bold; border-radius: 10px; cursor: pointer;
-            text-align: center; width: 100%; margin-top: 5px;
+            text-align: center; width: 100%;
         }
         .btn.sec { background: #3399ff; color: #fff; }
-        
-        .or-divider { text-align: center; color: #555; font-weight: bold; font-size: 0.9rem; margin: 5px 0; }
-
-        #room-status { font-size: 0.95rem; color: #00ff66; text-align: center; font-weight: bold; min-height: 20px; }
-        .code-display { background: #111; border: 1px dashed #00ff66; padding: 10px; border-radius: 8px; text-align: center; font-family: monospace; font-size: 1.2rem; color: #00ff66; cursor: pointer; }
+        .or-divider { text-align: center; color: #555; font-weight: bold; font-size: 0.9rem; }
+        #room-status { font-size: 0.95rem; color: #00ff66; text-align: center; font-weight: bold; }
+        .code-display { background: #111; border: 1px dashed #00ff66; padding: 10px; border-radius: 8px; text-align: center; font-family: monospace; font-size: 1.2rem; color: #00ff66; }
 
         #leave-btn {
             position: absolute; top: 15px; right: 15px; background: rgba(255, 51, 102, 0.2);
@@ -89,6 +101,35 @@
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
+
+    <div id="settings-gear-btn">⚙️</div>
+
+    <div id="settings-modal">
+        <div class="settings-box">
+            <h3 style="text-align: center; color: #00ff66;">Oyun Ayarları</h3>
+            <hr style="border: 0; border-top: 1px solid #444;">
+            
+            <div class="settings-row">
+                <label>Görünüm:</label>
+                <button class="btn" style="padding: 8px; font-size: 0.9rem; width: auto;" id="fullscreen-toggle-btn">Tam Ekran Yap</button>
+            </div>
+
+            <div class="settings-row">
+                <label>Şut Buton Boyutu:</label>
+                <input type="range" id="btn-size-slider" min="60" max="130" value="85">
+            </div>
+
+            <div class="settings-row">
+                <label>Buton Konumu:</label>
+                <select id="btn-side-select">
+                    <option value="right">Sağ Taraf</option>
+                    <option value="left">Sol Taraf</option>
+                </select>
+            </div>
+
+            <button class="btn sec" style="margin-top: 10px; padding: 10px;" id="settings-close-btn">Ayarları Kapat</button>
+        </div>
+    </div>
 
     <div class="scoreboard" id="game-scoreboard">
         <span class="score red" id="red-score">0</span>
@@ -130,16 +171,61 @@
     <div id="goal-screen" class="goal-flash">GOL!</div>
     <div id="mobile-kick-btn">ŞUT</div>
 
-    <div class="chat-container" id="game-chat">
-        <input type="text" id="chat-input" placeholder="Mesaj gönder..." maxlength="35">
-        <button class="send-btn" id="send-btn">GÖNDER</button>
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
-
     <script>
+        const container = document.getElementById('canvas-container');
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // Sabit Sanal Çözünürlük Dünyası
+        const V_WIDTH = 1200;
+        const V_HEIGHT = 700;
+        canvas.width = V_WIDTH;
+        canvas.height = V_HEIGHT;
+
+        const gearBtn = document.getElementById('settings-gear-btn');
+        const modal = document.getElementById('settings-modal');
+        const closeSettings = document.getElementById('settings-close-btn');
+        const sizeSlider = document.getElementById('btn-size-slider');
+        const sideSelect = document.getElementById('btn-side-select');
+        const fsBtn = document.getElementById('fullscreen-toggle-btn');
+        const mobileKickBtn = document.getElementById('mobile-kick-btn');
+
+        gearBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+        closeSettings.addEventListener('click', () => { modal.style.display = 'none'; });
+        
+        sizeSlider.addEventListener('input', (e) => {
+            let val = e.target.value;
+            mobileKickBtn.style.width = val + 'px';
+            mobileKickBtn.style.height = val + 'px';
+            mobileKickBtn.style.fontSize = (val / 70) + 'rem';
+        });
+
+        sideSelect.addEventListener('change', (e) => {
+            if(e.target.value === 'left') { mobileKickBtn.style.right = 'auto'; mobileKickBtn.style.left = '5%'; } 
+            else { mobileKickBtn.style.left = 'auto'; mobileKickBtn.style.right = '5%'; }
+        });
+
+        fsBtn.addEventListener('click', () => {
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+            modal.style.display = 'none';
+        });
+
+        function resizeGame() {
+            let windowWidth = window.innerWidth; let windowHeight = window.innerHeight;
+            let windowRatio = windowWidth / windowHeight; let targetRatio = V_WIDTH / V_HEIGHT;
+            if (windowRatio > targetRatio) {
+                container.style.width = (windowHeight * targetRatio) + 'px'; container.style.height = windowHeight + 'px';
+            } else {
+                container.style.width = windowWidth + 'px'; container.style.height = (windowWidth / targetRatio) + 'px';
+            }
+        }
+        window.addEventListener('resize', resizeGame);
+        window.addEventListener('orientationchange', () => { setTimeout(resizeGame, 200); });
 
         let audioCtx = null;
         function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -150,229 +236,153 @@
                 osc.connect(gain); gain.connect(audioCtx.destination);
                 if (type === 'kick') {
                     osc.type = 'sine'; osc.frequency.setValueAtTime(95, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.6, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
                     osc.start(); osc.stop(audioCtx.currentTime + 0.1);
                 } else if (type === 'post') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.12);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(130, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
                 } else if (type === 'goal') {
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(110, audioCtx.currentTime);
-                    osc.linearRampToValueAtTime(180, audioCtx.currentTime + 0.4);
-                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
                 }
             } catch(e) {}
         }
 
-        // Ağ Bağlantı Değişkenleri
-        let peer = null;
-        let conn = null;
-        let isHost = false; 
-        let myId = "";
-
+        let peer = null; let conn = null; let isHost = false;
         let redScore = 0; let blueScore = 0; let isGameActive = false;
 
-        let ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 8.5, friction: 0.976 };
-        // Kırmızı Takım (Kurucu), Mavi Takım (Katılan)
-        let pRed = { x: 0, y: 0, vx: 0, vy: 0, radius: 16.5, speed: 2.5, friction: 0.88, color: '#ff3366', name: 'EV SAHİBİ', number: '7', chatMessage: '', chatTimer: 0, isKicking: false };
-        let pBlue = { x: 0, y: 0, vx: 0, vy: 0, radius: 16.5, speed: 2.5, friction: 0.88, color: '#3399ff', name: 'MİSAFİR', number: '1', chatMessage: '', chatTimer: 0, isKicking: false };
-
-        let me = null; // Bu tarayıcıdaki oyuncuyu tutacak temsilci
+        let ball = { x: 600, y: 350, vx: 0, vy: 0, radius: 11, friction: 0.98 };
+        let pRed = { x: 300, y: 350, vx: 0, vy: 0, radius: 22, speed: 4.5, friction: 0.88, color: '#ff3366', name: 'EV SAHİBİ', number: '7', isKicking: false };
+        let pBlue = { x: 900, y: 350, vx: 0, vy: 0, radius: 22, speed: 4.5, friction: 0.88, color: '#3399ff', name: 'MİSAFİR', number: '1', isKicking: false };
+        let me = null;
 
         let keys = {};
         window.addEventListener('keydown', e => {
-            if (e.key === 'Enter') {
-                if (document.activeElement === chatInput) handleChatSubmit();
-                else if (isGameActive) chatInput.focus();
-                return;
-            }
-            if (e.key === ' ' || e.code === 'Space') { if (document.activeElement !== chatInput && isGameActive) { e.preventDefault(); me.isKicking = true; } return; }
-            if (document.activeElement === chatInput || document.activeElement === document.getElementById('name-input') || document.activeElement === document.getElementById('join-code-input')) return;
+            if (e.key === ' ' || e.code === 'Space') { if (isGameActive) { e.preventDefault(); me.isKicking = true; } return; }
             keys[e.key.toLowerCase()] = true;
         });
         window.addEventListener('keyup', e => { if (e.key === ' ' || e.code === 'Space') { me.isKicking = false; } keys[e.key.toLowerCase()] = false; });
 
         function checkAndExecuteKick(p) {
             let dx = ball.x - p.x; let dy = ball.y - p.y; let dist = Math.hypot(dx, dy);
-            if (dist < p.radius + ball.radius + 10) {
+            if (dist < p.radius + ball.radius + 12) {
                 let nx = dx / dist; let ny = dy / dist;
-                let kickPower = 13.0; // Füze gücü aktif
-                ball.vx = nx * kickPower; ball.vy = ny * kickPower;
+                ball.vx = nx * 13.0; ball.vy = ny * 13.0; // ŞUT GÜCÜ 13.0 Olarak Sabitlendi kanka!
                 playSound('kick');
             }
         }
 
-        let joystick = { baseX: 100, baseY: 0, radius: 45, stickX: 100, stickY: 0, stickRadius: 20, active: false, touchId: null };
-        document.addEventListener('touchmove', e => { if (isGameActive && e.target.id !== 'chat-input') e.preventDefault(); }, { passive: false });
+        let joystick = { active: false, startX: 0, startY: 0, moveX: 0, moveY: 0, touchId: null };
 
-        function resize() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            joystick.baseY = canvas.height - 100; joystick.stickY = joystick.baseY;
-            if(!isGameActive) resetPositions();
-        }
-        window.addEventListener('resize', resize); resize();
-
-        // NETWORK: ODA KURMA (HOST)
         document.getElementById('host-btn').addEventListener('click', () => {
             initAudio();
             let pName = document.getElementById('name-input').value.trim() || "EV SAHİBİ";
-            pRed.name = pName.toUpperCase();
-            isHost = true;
-            me = pRed; // Kurucu kırmızı takım
-
+            pRed.name = pName.toUpperCase(); isHost = true; me = pRed;
             document.getElementById('initial-actions').classList.add('hidden');
             document.getElementById('status-area').classList.remove('hidden');
-
-            // Benzersiz 5 haneli kısa oda kodu üretelim
             let randomId = "ZAX-" + Math.floor(1000 + Math.random() * 9000);
             peer = new Peer(randomId);
-
             peer.on('open', (id) => {
-                myId = id;
-                document.getElementById('room-status').innerText = "ODA KURULDU. ARKADAŞIN BEKLENİYOR...";
+                document.getElementById('room-status').innerText = "ODA AÇILDI. ARKADAŞINI BEKLE...";
                 document.getElementById('code-box').classList.remove('hidden');
                 document.getElementById('generated-code').innerText = id;
             });
-
-            peer.on('connection', (connection) => {
-                conn = connection;
-                setupNetworkEvents();
-            });
+            peer.on('connection', (connection) => { conn = connection; setupNetworkEvents(); });
         });
 
-        // NETWORK: ODAYA KATILMA (CLIENT)
         document.getElementById('join-btn').addEventListener('click', () => {
             initAudio();
             let code = document.getElementById('join-code-input').value.trim().toUpperCase();
-            if(!code) { alert("Lütfen geçerli bir oda kodu gir!"); return; }
-
+            if(!code) { alert("Oda kodu eksik!"); return; }
             let pName = document.getElementById('name-input').value.trim() || "MİSAFİR";
-            pBlue.name = pName.toUpperCase();
-            isHost = false;
-            me = pBlue; // Katılan mavi takım
-
-            document.getElementById('room-status').innerText = "Bağlanılıyor...";
+            pBlue.name = pName.toUpperCase(); isHost = false; me = pBlue;
+            document.getElementById('room-status').innerText = "Odaya uçuluyor...";
             document.getElementById('initial-actions').classList.add('hidden');
             document.getElementById('status-area').classList.remove('hidden');
-
             peer = new Peer();
-            peer.on('open', () => {
-                conn = peer.connect(code);
-                setupNetworkEvents();
-            });
+            peer.on('open', () => { conn = peer.connect(code); setupNetworkEvents(); });
         });
 
         function setupNetworkEvents() {
-            conn.on('open', () => {
-                // Bağlantı kurulunca ismi karşı tarafa gönder
-                conn.send({ type: 'init', name: me.name });
-            });
-
+            conn.on('open', () => { conn.send({ type: 'init', name: me.name }); });
             conn.on('data', (data) => {
                 if (data.type === 'init') {
-                    if(isHost) {
-                        pBlue.name = data.name;
-                        conn.send({ type: 'init_reply', name: pRed.name });
-                        startTheMatch();
-                    }
+                    if(isHost) { pBlue.name = data.name; conn.send({ type: 'init_reply', name: pRed.name }); startTheMatch(); }
                 }
-                if (data.type === 'init_reply') {
-                    pRed.name = data.name;
-                    startTheMatch();
-                }
-                
-                // Host verileri işler, Client ise Host'tan gelen dünya simülasyonunu ekrana basar
+                if (data.type === 'init_reply') { pRed.name = data.name; startTheMatch(); }
                 if (isHost) {
-                    if (data.type === 'client_input') {
-                        pBlue.vx = data.vx; pBlue.vy = data.vy;
-                        pBlue.isKicking = data.isKicking;
-                    }
+                    if (data.type === 'client_input') { pBlue.vx = data.vx; pBlue.vy = data.vy; pBlue.isKicking = data.isKicking; }
                 } else {
                     if (data.type === 'sync') {
                         ball.x = data.ball.x; ball.y = data.ball.y;
-                        pRed.x = data.pRed.x; pRed.y = data.pRed.y;
-                        pRed.isKicking = data.pRed.isKicking;
-                        pBlue.x = data.pBlue.x; pBlue.y = data.pBlue.y;
+                        pRed.x = data.pRed.x; pRed.y = data.pRed.y; pRed.isKicking = data.pRed.isKicking;
+                        pBlue.x = data.pBlue.x; pBlue.y = data.pBlue.y; pBlue.isKicking = data.pBlue.isKicking;
                         redScore = data.scores.red; blueScore = data.scores.blue;
-                        document.getElementById('red-score').innerText = redScore;
-                        document.getElementById('blue-score').innerText = blueScore;
+                        document.getElementById('red-score').innerText = redScore; document.getElementById('blue-score').innerText = blueScore;
                     }
-                    if (data.type === 'goal_event') {
-                        triggerGoalVisual(data.winner);
-                    }
-                }
-
-                // Chat Verisi alma
-                if (data.type === 'chat') {
-                    if(isHost) { pBlue.chatMessage = data.msg; pBlue.chatTimer = 180; }
-                    else { pRed.chatMessage = data.msg; pRed.chatTimer = 180; }
+                    if (data.type === 'goal_event') triggerGoalVisual(data.winner);
                 }
             });
-
-            conn.on('close', () => {
-                alert("Bağlantı koptu, arkadaşın odadan ayrıldı!");
-                location.reload();
-            });
+            conn.on('close', () => { alert("Bağlantı kesildi!"); location.reload(); });
         }
 
         function startTheMatch() {
             document.getElementById('lobby-screen').classList.add('hidden');
             document.getElementById('game-scoreboard').style.display = 'flex';
-            document.getElementById('game-chat').style.display = 'flex';
             document.getElementById('leave-btn').style.display = 'block';
-            if ('ontouchstart' in window) document.getElementById('mobile-kick-btn').style.display = 'flex';
-
-            isGameActive = true;
-            resetPositions();
-            update();
+            gearBtn.style.display = 'none'; 
+            container.style.display = 'block';
+            if ('ontouchstart' in window) mobileKickBtn.style.display = 'flex';
+            resizeGame();
+            isGameActive = true; resetPositions(); update();
         }
 
-        // Odadan Çıkış
         document.getElementById('leave-btn').addEventListener('click', () => { location.reload(); });
 
-        // Mobil Kontroller
+        // JOYSTICK
         window.addEventListener('touchstart', e => {
             if (!isGameActive) return;
-            if (e.target.id === 'chat-input' || e.target.id === 'send-btn' || e.target.id === 'mobile-kick-btn' || e.target.id === 'leave-btn') return;
             for (let touch of e.changedTouches) {
-                if (touch.clientX < canvas.width / 2) {
+                let isLeftOnScreen = touch.clientX < window.innerWidth / 2;
+                let joystickSideCondition = (sideSelect.value === 'right') ? isLeftOnScreen : !isLeftOnScreen;
+                if (joystickSideCondition && !joystick.active && e.target.id !== 'leave-btn') {
                     joystick.active = true; joystick.touchId = touch.identifier;
-                    updateJoystick(touch.clientX, touch.clientY); break;
-                }
-            }
-        });
-        window.addEventListener('touchmove', e => {
-            if (!joystick.active || !isGameActive) return;
-            for (let touch of e.changedTouches) { if (touch.identifier === joystick.touchId) { updateJoystick(touch.clientX, touch.clientY); break; } }
-        }, { passive: false });
-        window.addEventListener('touchend', e => {
-            for (let touch of e.changedTouches) {
-                if (touch.identifier === joystick.touchId) {
-                    joystick.active = false; joystick.touchId = null;
-                    joystick.stickX = joystick.baseX; joystick.stickY = joystick.baseY; break;
+                    joystick.startX = touch.clientX; joystick.startY = touch.clientY;
+                    joystick.moveX = touch.clientX; joystick.moveY = touch.clientY;
                 }
             }
         });
 
-        const mobileKickBtn = document.getElementById('mobile-kick-btn');
+        window.addEventListener('touchmove', e => {
+            if (!isGameActive) return;
+            for (let touch of e.changedTouches) {
+                if (joystick.active && touch.identifier === joystick.touchId) {
+                    joystick.moveX = touch.clientX; joystick.moveY = touch.clientY;
+                    let dx = joystick.moveX - joystick.startX; let dy = joystick.moveY - joystick.startY;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist > 10) {
+                        let angle = Math.atan2(dy, dx);
+                        me.vx = Math.cos(angle) * me.speed; me.vy = Math.sin(angle) * me.speed;
+                    }
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', e => {
+            for (let touch of e.changedTouches) {
+                if (joystick.active && touch.identifier === joystick.touchId) {
+                    joystick.active = false; joystick.touchId = null; me.vx = 0; me.vy = 0;
+                }
+            }
+        });
+
         mobileKickBtn.addEventListener('touchstart', e => { e.preventDefault(); if (isGameActive) me.isKicking = true; });
         mobileKickBtn.addEventListener('touchend', e => { e.preventDefault(); me.isKicking = false; });
 
-        function updateJoystick(touchX, touchY) {
-            let dx = touchX - joystick.baseX; let dy = touchY - joystick.baseY; let dist = Math.hypot(dx, dy);
-            if (dist <= joystick.radius) { joystick.stickX = touchX; joystick.stickY = touchY; } 
-            else { joystick.stickX = joystick.baseX + (dx / dist) * joystick.radius; joystick.stickY = joystick.baseY + (dy / dist) * joystick.radius; }
-            let jdx = joystick.stickX - joystick.baseX; let jdy = joystick.stickY - joystick.baseY;
-            if (Math.hypot(jdx, jdy) > 5) {
-                me.vx += ((jdx / joystick.radius) * me.speed - me.vx) * 0.15;
-                me.vy += ((jdy / joystick.radius) * me.speed - me.vy) * 0.15;
-            }
-        }
-
         function handleLocalInput() {
-            if (joystick.active || document.activeElement === chatInput) return;
+            if (joystick.active) return;
             let targetVx = 0; let targetVy = 0; let moving = false;
             if (keys['w'] || keys['arrowup']) { targetVy = -me.speed; moving = true; }
             if (keys['s'] || keys['arrowdown']) { targetVy = me.speed; moving = true; }
@@ -380,24 +390,14 @@
             if (keys['d'] || keys['arrowright']) { targetVx = me.speed; moving = true; }
             if (moving) {
                 if (targetVx !== 0 && targetVy !== 0) { targetVx *= 0.7071; targetVy *= 0.7071; }
-                me.vx += (targetVx - me.vx) * 0.18; me.vy += (targetVy - me.vy) * 0.18;
-            } else { me.vx *= me.friction; me.vy *= me.friction; }
+                me.vx = targetVx; me.vy = targetVy;
+            } else { me.vx *= me.friction; me.vy *= me.friction; if(Math.abs(me.vx)<0.1) me.vx=0; if(Math.abs(me.vy)<0.1) me.vy=0; }
         }
-
-        function handleChatSubmit() {
-            let text = chatInput.value.trim(); if (!text) return;
-            me.chatMessage = text; me.chatTimer = 180;
-            if(conn && conn.open) conn.send({ type: 'chat', msg: text });
-            chatInput.value = ''; chatInput.blur();
-        }
-        const chatInput = document.getElementById('chat-input');
-        document.getElementById('send-btn').addEventListener('click', handleChatSubmit);
 
         function resetPositions() {
-            let cx = canvas.width / 2; let cy = canvas.height / 2;
-            ball.x = cx; ball.y = cy; ball.vx = 0; ball.vy = 0;
-            pRed.x = cx - canvas.width * 0.22; pRed.y = cy; pRed.vx = 0; pRed.vy = 0; pRed.isKicking = false;
-            pBlue.x = cx + canvas.width * 0.22; pBlue.y = cy; pBlue.vx = 0; pBlue.vy = 0; pBlue.isKicking = false;
+            ball.x = 600; ball.y = 350; ball.vx = 0; ball.vy = 0;
+            pRed.x = 250; pRed.y = 350; pRed.vx = 0; pRed.vy = 0; pRed.isKicking = false;
+            pBlue.x = 950; pBlue.y = 350; pBlue.vx = 0; pBlue.vy = 0; pBlue.isKicking = false;
         }
 
         function resolveCollision(obj1, obj2, isBall = false) {
@@ -414,20 +414,15 @@
 
         function update() {
             if (!isGameActive) return;
-
             handleLocalInput();
 
-            if (conn && conn.open) {
-                if (!isHost) {
-                    // Client iseniz sadece girdilerinizi Host'a gönderirsiniz
-                    conn.send({ type: 'client_input', vx: me.vx, vy: me.vy, isKicking: me.isKicking });
-                }
+            if (conn && conn.open && !isHost) {
+                conn.send({ type: 'client_input', vx: me.vx, vy: me.vy, isKicking: me.isKicking });
             }
 
-            let margin = 45; let goalHeight = canvas.height * 0.35; let goalTop = (canvas.height - goalHeight) / 2;
-            let goalBottom = goalTop + goalHeight; let goalDepth = 35;
+            let margin = 60; let goalHeight = 220; let goalTop = (V_HEIGHT - goalHeight) / 2;
+            let goalBottom = goalTop + goalHeight; let goalDepth = 45;
 
-            // FİZİK VE SİMÜLASYONU SADECE HOST ÇALIŞTIRIR (Senkronizasyon hatasını önlemek için)
             if (isHost) {
                 pRed.x += pRed.vx; pRed.y += pRed.vy;
                 pBlue.x += pBlue.vx; pBlue.y += pBlue.vy;
@@ -440,80 +435,92 @@
                 ball.x += ball.vx; ball.y += ball.vy;
 
                 if (ball.y < margin + ball.radius) { ball.y = margin + ball.radius; ball.vy *= -0.8; }
-                if (ball.y > canvas.height - margin - ball.radius) { ball.y = canvas.height - margin - ball.radius; ball.vy *= -0.8; }
+                if (ball.y > V_HEIGHT - margin - ball.radius) { ball.y = V_HEIGHT - margin - ball.radius; ball.vy *= -0.8; }
 
-                // Gol Çizgisi Fiziği
-                if (ball.y >= goalTop - 5 && ball.y <= goalBottom + 5) {
-                    if (oldBallX >= margin - 2 && ball.x < margin + 5) { triggerGoal('blue'); }
-                    else if (oldBallX <= canvas.width - margin + 2 && ball.x > canvas.width - margin - 5) { triggerGoal('red'); }
+                if (ball.y >= goalTop && ball.y <= goalBottom) {
+                    if (oldBallX >= margin && ball.x < margin) { triggerGoal('blue'); }
+                    else if (oldBallX <= V_WIDTH - margin && ball.x > V_WIDTH - margin) { triggerGoal('red'); }
                 }
 
                 if (ball.x < margin + ball.radius && !(ball.y >= goalTop && ball.y <= goalBottom)) { ball.x = margin + ball.radius; ball.vx *= -0.8; }
-                if (ball.x > canvas.width - margin - ball.radius && !(ball.y >= goalTop && ball.y <= goalBottom)) { ball.x = canvas.width - margin - ball.radius; ball.vx *= -0.8; }
+                if (ball.x > V_WIDTH - margin - ball.radius && !(ball.y >= goalTop && ball.y <= goalBottom)) { ball.x = V_WIDTH - margin - ball.radius; ball.vx *= -0.8; }
 
                 if (Math.abs(ball.x - margin) < ball.radius && (Math.abs(ball.y - goalTop) < ball.radius || Math.abs(ball.y - goalBottom) < ball.radius)) { ball.vx *= -0.9; ball.vy *= -0.9; playSound('post'); }
-                if (Math.abs(ball.x - (canvas.width - margin)) < ball.radius && (Math.abs(ball.y - goalTop) < ball.radius || Math.abs(ball.y - goalBottom) < ball.radius)) { ball.vx *= -0.9; ball.vy *= -0.9; playSound('post'); }
+                if (Math.abs(ball.x - (V_WIDTH - margin)) < ball.radius && (Math.abs(ball.y - goalTop) < ball.radius || Math.abs(ball.y - goalBottom) < ball.radius)) { ball.vx *= -0.9; ball.vy *= -0.9; playSound('post'); }
 
                 resolveCollision(pRed, pBlue); resolveCollision(pRed, ball, true); resolveCollision(pBlue, ball, true);
 
                 [pRed, pBlue].forEach(p => {
-                    if (p.x < margin + p.radius) { p.x = margin + p.radius; p.vx *= -0.3; } if (p.x > canvas.width - margin - p.radius) { p.x = canvas.width - margin - p.radius; p.vx *= -0.3; }
-                    if (p.y < margin + p.radius) { p.y = margin + p.radius; p.vy *= -0.3; } if (p.y > canvas.height - margin - p.radius) { p.y = canvas.height - margin - p.radius; p.vy *= -0.3; }
+                    if (p.x < margin + p.radius) { p.x = margin + p.radius; } if (p.x > V_WIDTH - margin - p.radius) { p.x = V_WIDTH - margin - p.radius; }
+                    if (p.y < margin + p.radius) { p.y = margin + p.radius; } if (p.y > V_HEIGHT - margin - p.radius) { p.y = V_HEIGHT - margin - p.radius; }
                 });
 
-                // Client'a dünyayı yolla
                 if (conn && conn.open) {
                     conn.send({
-                        type: 'sync',
-                        ball: { x: ball.x, y: ball.y },
+                        type: 'sync', ball: { x: ball.x, y: ball.y },
                         pRed: { x: pRed.x, y: pRed.y, isKicking: pRed.isKicking },
                         pBlue: { x: pBlue.x, y: pBlue.y, isKicking: pBlue.isKicking },
                         scores: { red: redScore, blue: blueScore }
                     });
                 }
-                document.getElementById('red-score').innerText = redScore;
-                document.getElementById('blue-score').innerText = blueScore;
-            } else {
-                // Client kendi yerel sönümlenmesini yapar, ekranı pürüzsüzleştirir
-                me.x += me.vx; me.y += me.vy;
+                document.getElementById('red-score').innerText = redScore; document.getElementById('blue-score').innerText = blueScore;
             }
 
-            // --- SAHA ÇİZİMLERİ ---
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#278042'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 4;
-            ctx.strokeRect(margin, margin, canvas.width - margin * 2, canvas.height - margin * 2);
-            ctx.beginPath(); ctx.moveTo(canvas.width / 2, margin); ctx.lineTo(canvas.width / 2, canvas.height - margin); ctx.stroke();
-            ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, canvas.height * 0.22, 0, Math.PI * 2); ctx.stroke();
+            // --- PROFESYONEL STADYUM ÇİZİMİ ---
+            ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
+            ctx.fillStyle = '#226633'; ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT); // Çim Rengi
             
-            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(margin - goalDepth, goalTop, goalDepth, goalHeight); ctx.fillRect(canvas.width - margin, goalTop, goalDepth, goalHeight);
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 4;
+            
+            // Ana Saha Dış Çizgisi
+            ctx.strokeRect(margin, margin, V_WIDTH - margin * 2, V_HEIGHT - margin * 2);
+            
+            // Orta Saha ve Santra Noktası
+            ctx.beginPath(); ctx.moveTo(V_WIDTH / 2, margin); ctx.lineTo(V_WIDTH / 2, V_HEIGHT - margin); ctx.stroke();
+            ctx.beginPath(); ctx.arc(V_WIDTH / 2, V_HEIGHT / 2, 110, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(V_WIDTH / 2, V_HEIGHT / 2, 5, 0, Math.PI * 2); ctx.fill();
+
+            // KORNER YAYLARI (4 Köşe)
+            let arcR = 25;
+            // Sol Üst
+            ctx.beginPath(); ctx.arc(margin, margin, arcR, 0, Math.PI / 2); ctx.stroke();
+            // Sol Alt
+            ctx.beginPath(); ctx.arc(margin, V_HEIGHT - margin, arcR, 3 * Math.PI / 2, 0); ctx.stroke();
+            // Sağ Üst
+            ctx.beginPath(); ctx.arc(V_WIDTH - margin, margin, arcR, Math.PI / 2, Math.PI); ctx.stroke();
+            // Sağ Alt
+            ctx.beginPath(); ctx.arc(V_WIDTH - margin, V_HEIGHT - margin, arcR, Math.PI, 3 * Math.PI / 2); ctx.stroke();
+
+            // CEZA SAHALARI VE ALTIPAS (Büyük ve Küçük Kutular)
+            let boxHeight = 340; let boxTop = (V_HEIGHT - boxHeight) / 2; let boxWidth = 140;
+            let smallHeight = 160; let smallTop = (V_HEIGHT - smallHeight) / 2; let smallWidth = 50;
+            let penDist = 110; // Penaltı noktasının çizgiye uzaklığı
+
+            // Sol Ceza Sahası & Altıpas & Penaltı Noktası
+            ctx.strokeRect(margin, boxTop, boxWidth, boxHeight);
+            ctx.strokeRect(margin, smallTop, smallWidth, smallHeight);
+            ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(margin + penDist, V_HEIGHT / 2, 4, 0, Math.PI * 2); ctx.fill();
+
+            // Sağ Ceza Sahası & Altıpas & Penaltı Noktası
+            ctx.strokeRect(V_WIDTH - margin - boxWidth, boxTop, boxWidth, boxHeight);
+            ctx.strokeRect(V_WIDTH - margin - smallWidth, smallTop, smallWidth, smallHeight);
+            ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(V_WIDTH - margin - penDist, V_HEIGHT / 2, 4, 0, Math.PI * 2); ctx.fill();
+
+            // Kalelerin İç Ağ Bölgesi Çizimi
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(margin - goalDepth, goalTop, goalDepth, goalHeight); ctx.fillRect(V_WIDTH - margin, goalTop, goalDepth, goalHeight);
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 5;
             ctx.beginPath(); ctx.moveTo(margin, goalTop); ctx.lineTo(margin - goalDepth, goalTop); ctx.lineTo(margin - goalDepth, goalBottom); ctx.lineTo(margin, goalBottom); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(canvas.width - margin, goalTop); ctx.lineTo(canvas.width - margin + goalDepth, goalTop); ctx.lineTo(canvas.width - margin + goalDepth, goalBottom); ctx.lineTo(canvas.width - margin, goalBottom); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(V_WIDTH - margin, goalTop); ctx.lineTo(V_WIDTH - margin + goalDepth, goalTop); ctx.lineTo(V_WIDTH - margin + goalDepth, goalBottom); ctx.lineTo(V_WIDTH - margin, goalBottom); ctx.stroke();
 
-            if ('ontouchstart' in window || joystick.active) {
-                ctx.save(); ctx.beginPath(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 4; ctx.arc(joystick.baseX, joystick.baseY, joystick.radius, 0, Math.PI * 2); ctx.stroke();
-                ctx.beginPath(); ctx.fillStyle = 'rgba(0, 255, 102, 0.5)'; ctx.arc(joystick.stickX, joystick.stickY, joystick.stickRadius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-            }
+            // Top Çizimi
+            ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-            // Top
-            ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-
-            // İki Oyuncu
+            // Oyuncu Çizimleri
             [pRed, pBlue].forEach(p => {
-                if (p.isKicking) { ctx.save(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius + 1.5, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+                if (p.isKicking) { ctx.save(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius + 3, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
                 ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.number, p.x, p.y + 1);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.font = 'bold 11px sans-serif'; ctx.fillText(p.name, p.x, p.y + p.radius + 14);
-
-                if (p.chatTimer > 0) {
-                    p.chatTimer--; ctx.save(); ctx.font = '12px sans-serif';
-                    let textWidth = ctx.measureText(p.chatMessage).width; let bubbleW = textWidth + 16;
-                    let bubbleX = p.x - bubbleW / 2; let bubbleY = p.y - p.radius - 32;
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'; ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 1;
-                    ctx.beginPath(); ctx.roundRect(bubbleX, bubbleY, bubbleW, 24, 6); ctx.fill(); ctx.stroke();
-                    ctx.fillStyle = '#fff'; ctx.fillText(p.chatMessage, p.x, bubbleY + 13); ctx.restore();
-                }
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.number, p.x, p.y + 1);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.font = 'bold 14px sans-serif'; ctx.fillText(p.name, p.x, p.y + p.radius + 18);
             });
 
             requestAnimationFrame(update);
